@@ -12,4 +12,9 @@ func TestToFixedUrl(t *testing.T) {
 	if mailToUrl != "http://ajinkya.com/" {
 		t.Error("expected baseUrl instead of mailto link")
 	}
+
+	telephoneUrl := toFixedUrl("tel://9820098200", "http://ajinkya.com/")
+	if telephoneUrl != "http://ajinkya.com/" {
+		t.Error("expected baseUrl instead of telephone link")
+	}
 }

@@ -73,7 +73,7 @@ func checkErr(err error) {
 
 func toFixedUrl(href, base string) string {
 	uri, err := url.Parse(href)
-	if err != nil || uri.Scheme == "mailto" {
+	if err != nil || uri.Scheme == "mailto" || uri.Scheme == "tel" {
 		return base
 	}
 	baseUrl, err := url.Parse(base)
