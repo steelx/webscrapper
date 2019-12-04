@@ -40,7 +40,7 @@ func main() {
 	}()
 
 	for href := range urlQueue {
-		if isSameDomain(href, baseUrl) && !hasCrawled[href] {
+		if !hasCrawled[href] {
 			crawlLink(href, baseUrl)
 		}
 	}
@@ -58,9 +58,8 @@ func crawlLink(href, baseUrl string) {
 	checkErr(err)
 
 	for _, l := range links {
-		absoluteUrl := toFixedUrl(l.Href, baseUrl)
 		go func() {
-			urlQueue <- absoluteUrl
+			urlQueue <- toFixedUrl(l.Href, baseUrl)
 		}()
 	}
 }
@@ -74,8 +73,8 @@ func checkErr(err error) {
 
 func toFixedUrl(href, base string) string {
 	uri, err := url.Parse(href)
-	if err != nil {
-		return ""
+	if err != nil || uri.Scheme == "mailto" {
+		return base
 	}
 	baseUrl, err := url.Parse(base)
 	if err != nil {
@@ -83,21 +82,4 @@ func toFixedUrl(href, base string) string {
 	}
 	uri = baseUrl.ResolveReference(uri)
 	return uri.String()
-}
-
-func isSameDomain(href, baseUrl string) bool {
-	uri, err := url.Parse(href)
-	if err != nil {
-		return false
-	}
-	parentUri, err := url.Parse(baseUrl)
-	if err != nil {
-		return false
-	}
-
-	if uri.Host != parentUri.Host {
-		return false
-	}
-
-	return true
 }
