@@ -41,16 +41,16 @@ func main() {
 
 	for href := range urlQueue {
 		if !hasCrawled[href] {
-			crawlLink(href, baseUrl)
+			crawlLink(href)
 		}
 	}
 
 }
 
-func crawlLink(href, baseUrl string) {
-	hasCrawled[href] = true
-	fmt.Println("Crawling.. ", href)
-	resp, err := netClient.Get(href)
+func crawlLink(baseHref string) {
+	hasCrawled[baseHref] = true
+	fmt.Println("Crawling.. ", baseHref)
+	resp, err := netClient.Get(baseHref)
 	checkErr(err)
 	defer resp.Body.Close()
 
@@ -58,9 +58,10 @@ func crawlLink(href, baseUrl string) {
 	checkErr(err)
 
 	for _, l := range links {
-		go func() {
-			urlQueue <- toFixedUrl(l.Href, baseUrl)
-		}()
+		fixedUrl := toFixedUrl(l.Href, baseHref)
+		go func(url string) {
+			urlQueue <- url
+		}(fixedUrl)
 	}
 }
 
