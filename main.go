@@ -4,9 +4,11 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/steelx/extractlinks"
+	"github.com/steelx/webscrapper/graph"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 )
 
 var (
@@ -17,12 +19,14 @@ var (
 	}
 	hasCrawled = make(map[string]bool)
 	netClient  *http.Client
+	graphMap   = graph.NewGraph()
 )
 
 func init() {
 	netClient = &http.Client{
 		Transport: transport,
 	}
+	go SignalHandler(make(chan os.Signal, 1))
 }
 
 func main() {
@@ -47,7 +51,25 @@ func main() {
 
 }
 
+func SignalHandler(c chan os.Signal) {
+	signal.Notify(c, os.Interrupt)
+	for s := <-c; ; s = <-c {
+		switch s {
+		case os.Interrupt:
+			fmt.Println("^C received")
+			fmt.Println("<----------- ----------- ----------- ----------->")
+			fmt.Println("<----------- ----------- ----------- ----------->")
+			graphMap.CreatePath("https://youtube.com/jsfunc", "https://youtube.com/YouTubeRedOriginals")
+			os.Exit(0)
+		case os.Kill:
+			fmt.Println("SIGKILL received")
+			os.Exit(1)
+		}
+	}
+}
+
 func crawlLink(baseHref string) {
+	graphMap.AddVertex(baseHref)
 	hasCrawled[baseHref] = true
 	fmt.Println("Crawling.. ", baseHref)
 	resp, err := netClient.Get(baseHref)
@@ -58,7 +80,13 @@ func crawlLink(baseHref string) {
 	checkErr(err)
 
 	for _, l := range links {
+		if l.Href == "" {
+			continue
+		}
 		fixedUrl := toFixedUrl(l.Href, baseHref)
+		if baseHref != fixedUrl {
+			graphMap.AddEdge(baseHref, fixedUrl)
+		}
 		go func(url string) {
 			urlQueue <- url
 		}(fixedUrl)
