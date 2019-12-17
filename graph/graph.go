@@ -40,7 +40,7 @@ func (g *Graph) AddEdge(vertex, node string) bool {
 	}
 
 	if _, ok := g.Adjacency[node]; !ok {
-		fmt.Printf("Node %s not found in Adjacency, creating new vertex\n", node)
+		//fmt.Printf("Node %s not found in Adjacency, creating new vertex\n", node)
 		g.AddVertex(node)
 	}
 
